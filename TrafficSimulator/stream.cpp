@@ -77,6 +77,16 @@ quint64 Stream::readInitialTimestamp()
     return initTimestamp;
 }
 
+bool Stream::getIsActive() const
+{
+    return isActive;
+}
+
+void Stream::setIsActive(bool value)
+{
+    isActive = value;
+}
+
 void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type mapObjectType)
 {
     quint16 xPixTmp;

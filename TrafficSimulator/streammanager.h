@@ -5,7 +5,7 @@
 #include <QList>
 #include "stream.h"
 #include "frame.h"
-class StreamManager
+class StreamManager : public QObject
 {
     Q_OBJECT
 public:
@@ -19,6 +19,8 @@ private:
     QList <Stream*> streams;
     Frame finalFrame;
     quint64 activeTimestamp;
+
+    void updateActiveStreams();
 
 };
 

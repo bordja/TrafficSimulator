@@ -24,6 +24,7 @@ void StreamManager::init()
     }
 
     /* Find minimal timestamp */
+    minTimestamp = timestamps[0];
     for(int i = 1; i < streams.size(); i++)
     {
         if(minTimestamp > timestamps[i]){
@@ -32,6 +33,11 @@ void StreamManager::init()
     }
 
     this->activeTimestamp = minTimestamp;
+}
+
+void StreamManager::readStreams()
+{
+
 }
 
 void StreamManager::updateActiveStreams()
