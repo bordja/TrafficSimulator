@@ -28,6 +28,13 @@ MapObject::MapObject(type mapObjectType, quint16 xImgPix, quint16 yImgPix, quint
     }
 }
 
+MapObject::MapObject(type mapObjectType, double longitude, double latitude, int id)
+{
+    this->location = Point(longitude, latitude, SpatialReference::wgs84());
+    this->id = id;
+    this->mapObjectType = mapObjectType;
+}
+
 void MapObject::printInfo()
 {
     qDebug()<<"X:"<<this->imgPixPos.x();
@@ -35,4 +42,19 @@ void MapObject::printInfo()
     qDebug()<<"BBW:"<<this->bBoxWidth;
     qDebug()<<"BBH:"<<this->bBoxHeight;
 
+}
+
+int MapObject::getId() const
+{
+    return id;
+}
+
+Point MapObject::getLocation() const
+{
+    return this->location;
+}
+
+Point* MapObject::getLocationByAddress()
+{
+    return &this->location;
 }

@@ -55,6 +55,70 @@ void Stream::readFileData()
 
 }
 
+void Stream::readHeader()
+{
+    quint8 cameraId;
+
+    quint32 originPoleId;
+    quint16 originX;
+    quint16 originY;
+    quint32 upperPoleId;
+    quint16 upperPoleX;
+    quint16 upperPoleY;
+    quint32 rightPoleId;
+    quint16 rightPoleX;
+    quint16 rightPoleY;
+    quint32 notUsedPoleId;
+    quint16 notUsedPoleX;
+    quint16 notUsedPoleY;
+
+    QDataStream collector(this->file);
+    collector.setByteOrder(QDataStream::LittleEndian);
+    this->file->seek(0);
+
+    collector>>cameraId;
+    collector>>upperPoleId;
+    collector>>notUsedPoleId;
+    collector>>originPoleId;
+    collector>>rightPoleId;
+    collector>>upperPoleX;
+    collector>>upperPoleY;
+    collector>>notUsedPoleX;
+    collector>>notUsedPoleY;
+    collector>>originX;
+    collector>>originY;
+    collector>>rightPoleX;
+    collector>>rightPoleY;
+
+    constants.setOriginPoleId(originPoleId);
+    constants.setUpperPoleId(upperPoleId);
+    constants.setRightPoleId(rightPoleId);
+    constants.setOriginX(originX);
+    constants.setOriginY(imageHeight - originY);
+    constants.setUpperPoleX(upperPoleX);
+    constants.setUpperPoleY(imageHeight - upperPoleY);
+    constants.setRightPoleX(rightPoleX);
+    constants.setRightPoleY(imageHeight - rightPoleY);
+
+
+    constants.calculateConstants();
+}
+
+void Stream::printStreamConstants()
+{
+    qDebug()<<"ORIGIN(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getOriginLong();
+    qDebug()<<"ORIGIN(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getOriginLat();
+    qDebug()<<"UPPER(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getUpperPoleLong();
+    qDebug()<<"UPPER(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getUpperPoleLat();
+    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getRightPoleLong();
+    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getRightPoleLat();
+
+    qDebug()<<"HPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getHorisontalPixelDisplacementX();
+    qDebug()<<"HPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getHorisontalPixelDisplacementY();
+    qDebug()<<"VPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getVerticalPixelDisplacementX();
+    qDebug()<<"VPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getVerticalPixelDisplacementY();
+}
+
 Frame Stream::getFrame() const
 {
     return frame;

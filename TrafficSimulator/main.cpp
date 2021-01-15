@@ -53,11 +53,15 @@ int main(int argc, char *argv[])
 
     Stream cam1(stream1);
     Stream cam2(stream2);
+    cam1.readHeader();
+    cam1.printStreamConstants();
+//    StreamManager manager;
 
-    StreamManager manager;
+//    manager.addStream(cam1);
+//    manager.addStream(cam2);
 
-    manager.addStream(cam1);
-    manager.addStream(cam2);
+//    manager.init();
+//    manager.run();
 
     return application.exec();
 }

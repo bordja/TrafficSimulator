@@ -11,6 +11,11 @@ void StreamManager::addStream(Stream &stream)
     this->streams.append(&stream);
 }
 
+void StreamManager::run()
+{
+    readStreams();
+}
+
 void StreamManager::init()
 {
     quint64 timestamps [maxStreamNum];
@@ -33,11 +38,17 @@ void StreamManager::init()
     }
 
     this->activeTimestamp = minTimestamp;
+    updateActiveStreams();
 }
 
 void StreamManager::readStreams()
 {
-
+    for(int i = 1; i < streams.size(); i++)
+    {
+        streams[i]->readFileData();
+        //readNextTimestamp(if active)
+        //updateActiveStreams
+    }
 }
 
 void StreamManager::updateActiveStreams()

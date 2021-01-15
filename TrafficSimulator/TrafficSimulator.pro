@@ -43,6 +43,7 @@ SOURCES += \
     main.cpp \
     TrafficSimulator.cpp  \
     mapobject.cpp \
+    referencepointlist.cpp \
     stream.cpp \
     streamconstants.cpp \
     streammanager.cpp
@@ -52,6 +53,7 @@ HEADERS += \
     common.h \
     frame.h \
     mapobject.h \
+    referencepointlist.h \
     stream.h \
     streamconstants.h \
     data/out_perspective_1 \

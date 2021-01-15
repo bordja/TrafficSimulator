@@ -10,6 +10,8 @@ public:
     Stream(QString);
     bool openFile(QString);
     void readFileData();
+    void readHeader();
+    void printStreamConstants();
 
     Frame getFrame() const;
     void setFrame(const Frame &value);
