@@ -52,8 +52,9 @@ TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
 
 void TrafficSimulator::testGraphics()
 {
+    Point* p = new Point(19,43,SpatialReference::wgs84());
     SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), 7, this);
-    Graphic* graphicPoint = new Graphic(Point(19,43,SpatialReference::wgs84()),s, this);
+    Graphic* graphicPoint = new Graphic(*p,s, this);
     staticOverlay->graphics()->append(graphicPoint);
 }
 
@@ -67,15 +68,22 @@ void TrafficSimulator::updateGraphic(Frame* frame)
 
     this->dynamicOverlay->graphics()->clear();
 
-    QList<MapObject*>* pedestrians = frame->getListPointer(pedestrian);
-    QList<MapObject*>* vehicles = frame->getListPointer(vehicle);
+    QVector<MapObject*>* pedestrians = frame->getVectorPointer(pedestrian);
+    QVector<MapObject*>* vehicles = frame->getVectorPointer(vehicle);
 
     for(int i = 0; i < pedestrians->size(); i++)
     {
         Point* p = pedestrians->at(i)->getLocation();
-        Graphic* graphicPoint = new Graphic(*p, pedestrians->at(i)->getPointSymbol(), this);
-        qDebug()<<"X"<<pedestrians->at(i)->getLocation()->x();
-        qDebug()<<"Y"<<pedestrians->at(i)->getLocation()->y();
+        SimpleMarkerSymbol* s = pedestrians->at(i)->getPointSymbol();
+        Graphic* graphicPoint = new Graphic(*p, s, this);
+        dynamicOverlay->graphics()->append(graphicPoint);
+    }
+
+    for(int i = 0; i < vehicles->size(); i++)
+    {
+        Point* p = vehicles->at(i)->getLocation();
+        SimpleMarkerSymbol* s = vehicles->at(i)->getPointSymbol();
+        Graphic* graphicPoint = new Graphic(*p, s, this);
         dynamicOverlay->graphics()->append(graphicPoint);
     }
     emit graphicUpdated();

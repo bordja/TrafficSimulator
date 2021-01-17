@@ -47,16 +47,18 @@ int main(int argc, char *argv[])
       }
 
     TrafficSimulator applicationWindow;
-    Stream cam1(stream1);
-    Stream cam2(stream2);
     StreamManager manager(applicationWindow);
+    Stream* cam1 = new Stream(stream1);
+    Stream* cam2 = new Stream(stream2);
 
     manager.addStream(cam1);
+    manager.addStream(cam2);
 
     QThread producerThread;
 
     manager.moveToThread(&producerThread);
     producerThread.start();
+    QObject::connect(&manager, SIGNAL(finished()), &producerThread, SLOT(quit()));
 
     applicationWindow.setMinimumWidth(800);
     applicationWindow.setMinimumHeight(600);

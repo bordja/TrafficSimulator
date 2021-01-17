@@ -33,6 +33,18 @@ MapObject::MapObject(type mapObjectType, double longitude, double latitude, int 
     this->location = new Point(longitude, latitude, SpatialReference::wgs84());
     this->id = id;
     this->mapObjectType = mapObjectType;
+    if(mapObjectType == pedestrian)
+    {
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), 7, this);
+    }
+    else if(mapObjectType == vehicle)
+    {
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::green), 7, this);
+    }
+    else
+    {
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::white), 7, this);
+    }
 }
 
 void MapObject::printInfo()

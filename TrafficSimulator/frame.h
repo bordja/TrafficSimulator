@@ -2,7 +2,7 @@
 #define FRAME_H
 
 #include "mapobject.h"
-
+#include <QVector>
 class Frame
 {
 public:
@@ -11,10 +11,11 @@ public:
     void setTimestamp(const quint64 &value);
     void appendMapObject(MapObject* mapObject, type t);
     void printLists();
-    QList<MapObject*>* getListPointer(type);
+    QVector<MapObject*>* getVectorPointer(type);
 private:
-    QList <MapObject*> pedestrians;
-    QList <MapObject*> vehicles;
+    QVector <MapObject*>* pedestrians;
+    QVector <MapObject*>* vehicles;
+
     quint64 timestamp;
 
 };

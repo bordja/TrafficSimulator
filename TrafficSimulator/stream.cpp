@@ -17,8 +17,9 @@ Stream::Stream(QString fileName)
     this->openFile(fileName);
     this->currentFrame = 0;
     this->isActive=false;
-    numberOfFrames = (this->file->size() - headerSize) / frameSize;
-    frame = Frame();
+    this->numberOfFrames = (this->file->size() - headerSize) / frameSize;
+    this->frame = new Frame();
+    this->constants = new StreamConstants();
 }
 
 bool Stream::openFile(QString filePath)
@@ -52,7 +53,7 @@ void Stream::readFileData()
     collector>>numVehicle;
     fillFrameObjectList(collector,numVehicle,vehicle);
 
-    this->frame.setTimestamp(timestamp);
+    this->frame->setTimestamp(timestamp);
 
     /* Update current frame for the next read */
 
@@ -95,32 +96,32 @@ void Stream::readHeader()
     collector>>rightPoleX;
     collector>>rightPoleY;
 
-    constants.setOriginPoleId(originPoleId);
-    constants.setUpperPoleId(upperPoleId);
-    constants.setRightPoleId(rightPoleId);
-    constants.setOriginX(originX);
-    constants.setOriginY(imageHeight - originY);
-    constants.setUpperPoleX(upperPoleX);
-    constants.setUpperPoleY(imageHeight - upperPoleY);
-    constants.setRightPoleX(rightPoleX);
-    constants.setRightPoleY(imageHeight - rightPoleY);
+    constants->setOriginPoleId(originPoleId);
+    constants->setUpperPoleId(upperPoleId);
+    constants->setRightPoleId(rightPoleId);
+    constants->setOriginX(originX);
+    constants->setOriginY(imageHeight - originY);
+    constants->setUpperPoleX(upperPoleX);
+    constants->setUpperPoleY(imageHeight - upperPoleY);
+    constants->setRightPoleX(rightPoleX);
+    constants->setRightPoleY(imageHeight - rightPoleY);
 
-    constants.calculateConstants();
+    constants->calculateConstants();
 }
 
 void Stream::printStreamConstants()
 {
-    qDebug()<<"ORIGIN(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getOriginLong();
-    qDebug()<<"ORIGIN(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getOriginLat();
-    qDebug()<<"UPPER(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getUpperPoleLong();
-    qDebug()<<"UPPER(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getUpperPoleLat();
-    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getRightPoleLong();
-    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getRightPoleLat();
+    qDebug()<<"ORIGIN(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getOriginLong();
+    qDebug()<<"ORIGIN(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getOriginLat();
+    qDebug()<<"UPPER(X): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getUpperPoleLong();
+    qDebug()<<"UPPER(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getUpperPoleLat();
+    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getRightPoleLong();
+    qDebug()<<"RIGHT(Y): "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getRightPoleLat();
 
-    qDebug()<<"HPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getHorisontalPixelDisplacementX();
-    qDebug()<<"HPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getHorisontalPixelDisplacementY();
-    qDebug()<<"VPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getVerticalPixelDisplacementX();
-    qDebug()<<"VPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getVerticalPixelDisplacementY();
+    qDebug()<<"HPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getHorisontalPixelDisplacementX();
+    qDebug()<<"HPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getHorisontalPixelDisplacementY();
+    qDebug()<<"VPDX: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getVerticalPixelDisplacementX();
+    qDebug()<<"VPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getVerticalPixelDisplacementY();
 }
 
 void Stream::calculateCoordinates(type mapObjectType)
@@ -131,37 +132,31 @@ void Stream::calculateCoordinates(type mapObjectType)
     quint16 deltaY;
     double longitude;
     double latitude;
-    QList<MapObject*>* objectList = this->getFrame().getListPointer(mapObjectType);
+    QVector<MapObject*>* objectVector = this->getFrame()->getVectorPointer(mapObjectType);
 
-    for(int i = 0; i < objectList->size(); i++)
+    for(int i = 0; i < objectVector->size(); i++)
     {
-        longitude = constants.getOriginLong();
-        latitude = constants.getOriginLat();
+        longitude = constants->getOriginLong();
+        latitude = constants->getOriginLat();
 
-        xImgPix = objectList->at(i)->getImgPixPos()->x();
-        yImgPix = objectList->at(i)->getImgPixPos()->y();
-        deltaX = xImgPix - constants.getOriginX();
-        deltaY = yImgPix - constants.getOriginY();
+        xImgPix = objectVector->at(i)->getImgPixPos()->x();
+        yImgPix = objectVector->at(i)->getImgPixPos()->y();
+        deltaX = xImgPix - constants->getOriginX();
+        deltaY = yImgPix - constants->getOriginY();
 
-        longitude += ((deltaX * constants.getHorisontalPixelDisplacementX()) + (deltaY * constants.getVerticalPixelDisplacementX()));
-        latitude += ((deltaX * constants.getHorisontalPixelDisplacementY()) + (deltaY * constants.getVerticalPixelDisplacementY()));
+        longitude += ((deltaX * constants->getHorisontalPixelDisplacementX()) + (deltaY * constants->getVerticalPixelDisplacementX()));
+        latitude += ((deltaX * constants->getHorisontalPixelDisplacementY()) + (deltaY * constants->getVerticalPixelDisplacementY()));
 
-        PointBuilder pointBuilder(*(objectList->at(i)->getLocation()));
-        pointBuilder.setX(longitude);
-        pointBuilder.setY(latitude);
-        Point location = pointBuilder.toPoint();
-        objectList->at(i)->setLocation(&location);
+        Point* p = new Point(longitude,latitude,SpatialReference::wgs84());
+        objectVector->at(i)->setLocation(p);
+
+
     }
 }
 
-Frame& Stream::getFrame()
+Frame* Stream::getFrame()
 {
     return frame;
-}
-
-void Stream::setFrame(const Frame &value)
-{
-    frame = value;
 }
 
 quint64 Stream::readNextTimestamp()
@@ -196,6 +191,11 @@ void Stream::setNumberOfFrames(const quint16 &value)
     numberOfFrames = value;
 }
 
+StreamConstants *Stream::getConstants() const
+{
+    return constants;
+}
+
 void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type mapObjectType)
 {
     quint16 xPixTmp;
@@ -203,9 +203,9 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type 
     quint16 bBoxWidthTmp;
     quint16 bBoxHeightTmp;
 
-    if(!(this->getFrame().getListPointer(mapObjectType)->isEmpty()))
+    if(!(this->getFrame()->getVectorPointer(mapObjectType)->isEmpty()))
     {
-        this->getFrame().getListPointer(mapObjectType)->clear();
+        this->getFrame()->getVectorPointer(mapObjectType)->clear();
     }
 
     for(int i = 0; i < mapObjectNum; i++)
@@ -217,7 +217,7 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type 
 
         MapObject* mapObject = new MapObject(mapObjectType, xPixTmp, yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
 
-        this->frame.appendMapObject(mapObject, mapObjectType);
+        this->frame->appendMapObject(mapObject, mapObjectType);
     }
 }
 
@@ -228,7 +228,8 @@ void Stream::updateCurrentFrame()
     if(currentFrame == numberOfFrames)
     {
         this->isActive = false;
-        this->getFrame().setTimestamp(-1);
-        qDebug()<<"finished, timestamp is set to: "<<this->getFrame().getTimestamp();
+        this->getFrame()->setTimestamp(-1);
+        qDebug()<<"finished, timestamp is set to: "<<this->getFrame()->getTimestamp();
+        emit(streamFinished());
     }
 }

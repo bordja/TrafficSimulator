@@ -12,7 +12,8 @@ class StreamManager : public QObject
 public:
     StreamManager();
     StreamManager(TrafficSimulator&);
-    void addStream(Stream& stream);
+    void addStream(Stream* stream);
+    void streamsFinished();
     void run();
     void init();
 
@@ -21,8 +22,9 @@ public slots:
     void readStreams();
 signals:
     void dataReady(Frame*);
+    void finished();
 private:
-    QList <Stream*> streams;
+    QList<Stream*>* streams;
     quint64 activeTimestamp;
     void updateFinalFrame(int);
     void updateActiveStreams();

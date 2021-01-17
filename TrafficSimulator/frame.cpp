@@ -3,6 +3,8 @@
 Frame::Frame()
 {
     this->timestamp = 0;
+    this->pedestrians = new QVector<MapObject*>;
+    this->vehicles = new QVector<MapObject*>;
 }
 
 quint64 Frame::getTimestamp() const
@@ -19,37 +21,37 @@ void Frame::appendMapObject(MapObject *mapObject, type mapObjType)
 {
     if(mapObjType == pedestrian)
     {
-        this->pedestrians.append(mapObject);
+        this->pedestrians->append(mapObject);
     }
     else if(mapObjType == vehicle)
     {
-        this->vehicles.append(mapObject);
+        this->vehicles->append(mapObject);
     }
 }
 
 void Frame::printLists()
 {
-    for(int i = 0; i < pedestrians.size(); i++)
+    for(int i = 0; i < pedestrians->size(); i++)
     {
        qDebug()<<"Pedestrian["<<i<<"]";
-       pedestrians[i]->printInfo();
+       pedestrians->at(i)->printInfo();
     }
-    for(int i = 0; i < vehicles.size(); i++)
+    for(int i = 0; i < vehicles->size(); i++)
     {
        qDebug()<<"Vehicle["<<i<<"]";
-       vehicles[i]->printInfo();
+       vehicles->at(i)->printInfo();
     }
 }
 
-QList<MapObject *> *Frame::getListPointer(type t)
+QVector<MapObject*>* Frame::getVectorPointer(type t)
 {
     if(t == pedestrian)
     {
-        return &pedestrians;
+        return this->pedestrians;
     }
     else if(t == vehicle)
     {
-        return &vehicles;
+        return this->vehicles;
     }
     else
     {
