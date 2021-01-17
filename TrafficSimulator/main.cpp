@@ -14,7 +14,7 @@
 // Qt headers
 #include <QApplication>
 #include <QMessageBox>
-
+#include <QThread>
 
 #include "ArcGISRuntimeEnvironment.h"
 
@@ -47,21 +47,24 @@ int main(int argc, char *argv[])
       }
 
     TrafficSimulator applicationWindow;
+    Stream cam1(stream1);
+    Stream cam2(stream2);
+    StreamManager manager(applicationWindow);
+
+    manager.addStream(cam1);
+
+    QThread producerThread;
+
+    manager.moveToThread(&producerThread);
+    producerThread.start();
+
     applicationWindow.setMinimumWidth(800);
     applicationWindow.setMinimumHeight(600);
     applicationWindow.show();
+    applicationWindow.testGraphics();
 
-    Stream cam1(stream1);
-    Stream cam2(stream2);
-    cam1.readHeader();
-    cam1.printStreamConstants();
-//    StreamManager manager;
-
-//    manager.addStream(cam1);
-//    manager.addStream(cam2);
-
-//    manager.init();
-//    manager.run();
+    manager.init();
+    manager.run();
 
     return application.exec();
 }

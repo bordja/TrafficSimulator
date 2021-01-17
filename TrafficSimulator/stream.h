@@ -12,18 +12,22 @@ public:
     void readFileData();
     void readHeader();
     void printStreamConstants();
+    void calculateCoordinates(type mapObjectType);
 
-    Frame getFrame() const;
+    Frame& getFrame();
     void setFrame(const Frame &value);
-    quint64 readInitialTimestamp();
     bool getIsActive() const;
     void setIsActive(bool value);
+    quint64 readNextTimestamp();
+    quint16 getNumberOfFrames() const;
+    void setNumberOfFrames(const quint16 &value);
 
 private:
     QFile* file;
     Frame frame;
     StreamConstants constants;
     quint16 currentFrame;
+    quint16 numberOfFrames;
     bool isActive;
 
     void fillFrameObjectList(QDataStream& collector, int mapObjectNum, type mapObjectType);

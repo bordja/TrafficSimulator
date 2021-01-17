@@ -133,3 +133,13 @@ double StreamConstants::getVerticalPixelDisplacementY() const
 {
     return verticalPixelDisplacementY;
 }
+
+quint16 StreamConstants::getOriginX() const
+{
+    return originX;
+}
+
+quint16 StreamConstants::getOriginY() const
+{
+    return originY;
+}

@@ -31,7 +31,7 @@ TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
     m_mapView = new MapGraphicsView(this);
 
     // Create a map using the topographic Basemap
-    m_map = new Map(Basemap::topographic(this), this);
+    m_map = new Map(Basemap::imagery(this), this);
 
     // Set map to map view
     m_mapView->setMap(m_map);
@@ -42,9 +42,41 @@ TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
     // set view center
     const Point center(centerViewLong, centerViewLat, SpatialReference::wgs84());
     m_mapView->setViewpointCenter(center, centerViewZoom);
+
+    dynamicOverlay = new GraphicsOverlay(this);
+    m_mapView->graphicsOverlays()->append(dynamicOverlay);
+
+    staticOverlay = new GraphicsOverlay(this);
+    m_mapView->graphicsOverlays()->append(staticOverlay);
+}
+
+void TrafficSimulator::testGraphics()
+{
+    SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), 7, this);
+    Graphic* graphicPoint = new Graphic(Point(19,43,SpatialReference::wgs84()),s, this);
+    staticOverlay->graphics()->append(graphicPoint);
 }
 
 // destructor
 TrafficSimulator::~TrafficSimulator()
 {
+}
+
+void TrafficSimulator::updateGraphic(Frame* frame)
+{
+
+    this->dynamicOverlay->graphics()->clear();
+
+    QList<MapObject*>* pedestrians = frame->getListPointer(pedestrian);
+    QList<MapObject*>* vehicles = frame->getListPointer(vehicle);
+
+    for(int i = 0; i < pedestrians->size(); i++)
+    {
+        Point* p = pedestrians->at(i)->getLocation();
+        Graphic* graphicPoint = new Graphic(*p, pedestrians->at(i)->getPointSymbol(), this);
+        qDebug()<<"X"<<pedestrians->at(i)->getLocation()->x();
+        qDebug()<<"Y"<<pedestrians->at(i)->getLocation()->y();
+        dynamicOverlay->graphics()->append(graphicPoint);
+    }
+    emit graphicUpdated();
 }

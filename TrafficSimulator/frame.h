@@ -11,6 +11,7 @@ public:
     void setTimestamp(const quint64 &value);
     void appendMapObject(MapObject* mapObject, type t);
     void printLists();
+    QList<MapObject*>* getListPointer(type);
 private:
     QList <MapObject*> pedestrians;
     QList <MapObject*> vehicles;

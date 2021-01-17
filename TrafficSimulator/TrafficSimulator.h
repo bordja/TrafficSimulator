@@ -13,13 +13,15 @@
 
 #ifndef TRAFFICSIMULATOR_H
 #define TRAFFICSIMULATOR_H
-
+#include "frame.h"
 namespace Esri
 {
 namespace ArcGISRuntime
 {
 class Map;
 class MapGraphicsView;
+class GraphicsOverlay;
+class Graphic;
 }
 }
 
@@ -30,13 +32,18 @@ class TrafficSimulator : public QMainWindow
     Q_OBJECT
 public:
     explicit TrafficSimulator(QWidget* parent = nullptr);
+    void testGraphics();
     ~TrafficSimulator() override;
 
 public slots:
-
+    void updateGraphic(Frame*);
+signals:
+    void graphicUpdated();
 private:
     Esri::ArcGISRuntime::Map*                   m_map = nullptr;
     Esri::ArcGISRuntime::MapGraphicsView*       m_mapView = nullptr;
+    Esri::ArcGISRuntime::GraphicsOverlay*       dynamicOverlay = nullptr;
+    Esri::ArcGISRuntime::GraphicsOverlay*       staticOverlay = nullptr;
 };
 
 #endif // TRAFFICSIMULATOR_H

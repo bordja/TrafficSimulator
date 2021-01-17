@@ -5,22 +5,28 @@
 #include <QList>
 #include "stream.h"
 #include "frame.h"
+#include "TrafficSimulator.h"
 class StreamManager : public QObject
 {
     Q_OBJECT
 public:
     StreamManager();
+    StreamManager(TrafficSimulator&);
     void addStream(Stream& stream);
     void run();
     void init();
+
+    Frame* finalFrame;
 public slots:
     void readStreams();
+signals:
+    void dataReady(Frame*);
 private:
     QList <Stream*> streams;
-    Frame finalFrame;
     quint64 activeTimestamp;
-
+    void updateFinalFrame(int);
     void updateActiveStreams();
+    void updateActiveTimestamp();
 
 };
 

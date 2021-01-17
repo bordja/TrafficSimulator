@@ -5,7 +5,7 @@
 #include "common.h"
 #include "frame.h"
 #include "mapobject.h"
-
+#include "PointBuilder.h"
 Stream::Stream()
 {
     this->currentFrame = 0;
@@ -17,6 +17,8 @@ Stream::Stream(QString fileName)
     this->openFile(fileName);
     this->currentFrame = 0;
     this->isActive=false;
+    numberOfFrames = (this->file->size() - headerSize) / frameSize;
+    frame = Frame();
 }
 
 bool Stream::openFile(QString filePath)
@@ -33,7 +35,6 @@ void Stream::readFileData()
     quint16 numVehicle;
     quint64 filePosition;
 
-    updateCurrentFrame();
     this->file->seek(headerSize + frameSize * this->currentFrame);
 
     QDataStream collector(this->file);
@@ -52,6 +53,10 @@ void Stream::readFileData()
     fillFrameObjectList(collector,numVehicle,vehicle);
 
     this->frame.setTimestamp(timestamp);
+
+    /* Update current frame for the next read */
+
+    updateCurrentFrame();
 
 }
 
@@ -100,7 +105,6 @@ void Stream::readHeader()
     constants.setRightPoleX(rightPoleX);
     constants.setRightPoleY(imageHeight - rightPoleY);
 
-
     constants.calculateConstants();
 }
 
@@ -119,7 +123,38 @@ void Stream::printStreamConstants()
     qDebug()<<"VPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants.getVerticalPixelDisplacementY();
 }
 
-Frame Stream::getFrame() const
+void Stream::calculateCoordinates(type mapObjectType)
+{
+    quint16 xImgPix;
+    quint16 yImgPix;
+    quint16 deltaX;
+    quint16 deltaY;
+    double longitude;
+    double latitude;
+    QList<MapObject*>* objectList = this->getFrame().getListPointer(mapObjectType);
+
+    for(int i = 0; i < objectList->size(); i++)
+    {
+        longitude = constants.getOriginLong();
+        latitude = constants.getOriginLat();
+
+        xImgPix = objectList->at(i)->getImgPixPos()->x();
+        yImgPix = objectList->at(i)->getImgPixPos()->y();
+        deltaX = xImgPix - constants.getOriginX();
+        deltaY = yImgPix - constants.getOriginY();
+
+        longitude += ((deltaX * constants.getHorisontalPixelDisplacementX()) + (deltaY * constants.getVerticalPixelDisplacementX()));
+        latitude += ((deltaX * constants.getHorisontalPixelDisplacementY()) + (deltaY * constants.getVerticalPixelDisplacementY()));
+
+        PointBuilder pointBuilder(*(objectList->at(i)->getLocation()));
+        pointBuilder.setX(longitude);
+        pointBuilder.setY(latitude);
+        Point location = pointBuilder.toPoint();
+        objectList->at(i)->setLocation(&location);
+    }
+}
+
+Frame& Stream::getFrame()
 {
     return frame;
 }
@@ -129,16 +164,16 @@ void Stream::setFrame(const Frame &value)
     frame = value;
 }
 
-quint64 Stream::readInitialTimestamp()
+quint64 Stream::readNextTimestamp()
 {
-    quint64 initTimestamp;
+    quint64 timestamp;
     this->file->seek(headerSize + frameSize * this->currentFrame);
 
     QDataStream collector(this->file);
     collector.setByteOrder(QDataStream::LittleEndian);
 
-    collector>>initTimestamp;
-    return initTimestamp;
+    collector>>timestamp;
+    return timestamp;
 }
 
 bool Stream::getIsActive() const
@@ -151,12 +186,27 @@ void Stream::setIsActive(bool value)
     isActive = value;
 }
 
+quint16 Stream::getNumberOfFrames() const
+{
+    return numberOfFrames;
+}
+
+void Stream::setNumberOfFrames(const quint16 &value)
+{
+    numberOfFrames = value;
+}
+
 void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type mapObjectType)
 {
     quint16 xPixTmp;
     quint16 yPixTmp;
     quint16 bBoxWidthTmp;
     quint16 bBoxHeightTmp;
+
+    if(!(this->getFrame().getListPointer(mapObjectType)->isEmpty()))
+    {
+        this->getFrame().getListPointer(mapObjectType)->clear();
+    }
 
     for(int i = 0; i < mapObjectNum; i++)
     {
@@ -173,14 +223,12 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type 
 
 void Stream::updateCurrentFrame()
 {
-    static bool first = true;
 
-    if(!first)
+    this->currentFrame++;
+    if(currentFrame == numberOfFrames)
     {
-        this->currentFrame++;
-    }
-    else
-    {
-        first = false;
+        this->isActive = false;
+        this->getFrame().setTimestamp(-1);
+        qDebug()<<"finished, timestamp is set to: "<<this->getFrame().getTimestamp();
     }
 }

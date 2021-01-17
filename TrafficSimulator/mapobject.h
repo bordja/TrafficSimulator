@@ -19,12 +19,17 @@ public:
 
     int getId() const;
 
-    Point getLocation() const;
-    Point* getLocationByAddress();
+    Point* getLocation();
+
+    Point* getImgPixPos() const;
+
+    void setLocation(Point *value);
+
+    SimpleMarkerSymbol *getPointSymbol() const;
 
 private:
-    Point location;
-    Point imgPixPos;
+    Point* location;
+    Point* imgPixPos;
     quint16 bBoxWidth;
     quint16 bBoxHeight;
     SimpleMarkerSymbol* pointSymbol;

@@ -2,7 +2,7 @@
 #include <QDebug>
 Frame::Frame()
 {
-
+    this->timestamp = 0;
 }
 
 quint64 Frame::getTimestamp() const
@@ -38,5 +38,21 @@ void Frame::printLists()
     {
        qDebug()<<"Vehicle["<<i<<"]";
        vehicles[i]->printInfo();
+    }
+}
+
+QList<MapObject *> *Frame::getListPointer(type t)
+{
+    if(t == pedestrian)
+    {
+        return &pedestrians;
+    }
+    else if(t == vehicle)
+    {
+        return &vehicles;
+    }
+    else
+    {
+        return nullptr;
     }
 }

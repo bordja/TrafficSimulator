@@ -52,6 +52,10 @@ public:
 
     double getVerticalPixelDisplacementY() const;
 
+    quint16 getOriginX() const;
+
+    quint16 getOriginY() const;
+
 private:
     quint8 cameraId;
 
