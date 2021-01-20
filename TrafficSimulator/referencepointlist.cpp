@@ -2,6 +2,7 @@
 
 ReferencePointList::ReferencePointList()
 {
+    this->poles = new QList<MapObject*>;
     MapObject* p1 = new MapObject(POLE, 19.8371305682558, 45.2403304784098, 3306801);
     MapObject* p2 = new MapObject(POLE,19.835852304712, 45.2400027202778, 3306959);
     MapObject* p3 = new MapObject(POLE, 19.8381933428869, 45.2404551891655, 3284215);
@@ -35,48 +36,53 @@ ReferencePointList::ReferencePointList()
     MapObject* p31 = new  MapObject(POLE, 19.8344366643589, 45.2394062464638, 3284228);
     MapObject* p32 = new  MapObject(POLE, 19.8381560091267, 45.2398922192009, 3283041);
 
-    poles.append(p1);
-    poles.append(p2);
-    poles.append(p3);
-    poles.append(p4);
-    poles.append(p5);
-    poles.append(p6);
-    poles.append(p7);
-    poles.append(p8);
-    poles.append(p9);
-    poles.append(p10);
-    poles.append(p11);
-    poles.append(p12);
-    poles.append(p13);
-    poles.append(p14);
-    poles.append(p15);
-    poles.append(p16);
-    poles.append(p17);
-    poles.append(p18);
-    poles.append(p19);
-    poles.append(p20);
-    poles.append(p21);
-    poles.append(p22);
-    poles.append(p23);
-    poles.append(p24);
-    poles.append(p25);
-    poles.append(p26);
-    poles.append(p27);
-    poles.append(p28);
-    poles.append(p29);
-    poles.append(p30);
-    poles.append(p31);
-    poles.append(p32);
+    poles->append(p1);
+    poles->append(p2);
+    poles->append(p3);
+    poles->append(p4);
+    poles->append(p5);
+    poles->append(p6);
+    poles->append(p7);
+    poles->append(p8);
+    poles->append(p9);
+    poles->append(p10);
+    poles->append(p11);
+    poles->append(p12);
+    poles->append(p13);
+    poles->append(p14);
+    poles->append(p15);
+    poles->append(p16);
+    poles->append(p17);
+    poles->append(p18);
+    poles->append(p19);
+    poles->append(p20);
+    poles->append(p21);
+    poles->append(p22);
+    poles->append(p23);
+    poles->append(p24);
+    poles->append(p25);
+    poles->append(p26);
+    poles->append(p27);
+    poles->append(p28);
+    poles->append(p29);
+    poles->append(p30);
+    poles->append(p31);
+    poles->append(p32);
 }
 
 Point* ReferencePointList::getPoleLocationFromId(int id)
 {
-    for(int i = 0; i < poles.size(); i++)
+    for(int i = 0; i < poles->size(); i++)
     {
-        if(poles[i]->getId() == id)
+        if(poles->at(i)->getId() == id)
         {
-            return (poles[i]->getLocation());
+            return (poles->at(i)->getLocation());
         }
     }
     return nullptr;
+}
+
+QList<MapObject *> *ReferencePointList::getPoles() const
+{
+    return poles;
 }

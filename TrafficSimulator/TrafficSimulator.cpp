@@ -22,7 +22,7 @@
 #include "common.h"
 #include "PolygonBuilder.h"
 #include "SimpleFillSymbol.h"
-#include "GeometryEngine.h"
+#include "referencepointlist.h"
 using namespace Esri::ArcGISRuntime;
 
 TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
@@ -54,10 +54,14 @@ TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
 
 void TrafficSimulator::testGraphics()
 {
-//    Point* p = new Point(19.8348484848,45.2699585858,SpatialReference::wgs84());
-//    SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::cyan), 7, this);
-//    Graphic* graphicPoint = new Graphic(*p,s, this);
-//    staticOverlay->graphics()->append(graphicPoint);
+    ReferencePointList lightPoles;
+    SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::cyan), 7, this);
+    for(int i = 0; i< lightPoles.getPoles()->size(); i++)
+    {
+        Point* p = lightPoles.getPoles()->at(i)->getLocation();
+        Graphic* graphicPoint = new Graphic(*p,s, this);
+        staticOverlay->graphics()->append(graphicPoint);
+    }
 }
 
 // destructor

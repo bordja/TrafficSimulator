@@ -36,6 +36,50 @@ MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint
     }
 }
 
+MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint16 bBoxWidth, quint16 bBoxHeight, quint8 camId)
+{
+    this->type = type;
+    this->imgPixPos = new Point(xImgPix,yImgPix,SpatialReference::wgs84());
+    this->bBoxWidth = bBoxWidth;
+    this->bBoxHeight = bBoxHeight;
+    this->location = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxTopRight = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxBottomLeft = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxBottomRight = new Point(0, 0, SpatialReference::wgs84());
+
+    /* Setting different colors depending on the camera ID */
+    if(type == PEDESTRIAN)
+    {
+        this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(Qt::red), this);
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), mapObjectPointSize, this);
+
+    }
+    else if(type == VEHICLE)
+    {
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::green), mapObjectPointSize, this);
+
+        switch (camId) {
+        case 1:
+            this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(0,255,0), this);
+            break;
+        case 2:
+            this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(255,255,255), this);
+            break;
+        case 3:
+            this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(255,255,155), this);
+            break;
+        case 4:
+            this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(255,255,255), this);
+            break;
+        }
+    }
+    else
+    {
+        this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::white), mapObjectPointSize, this);
+        this->fillSymbol = new SimpleFillSymbol(SimpleFillSymbolStyle::Solid, QColor(Qt::white), this);
+    }
+}
+
 MapObject::MapObject(mapObjectType type, double longitude, double latitude, int id)
 {
     this->location = new Point(longitude, latitude, SpatialReference::wgs84());
@@ -158,4 +202,19 @@ Point *MapObject::getBBoxBottomRight() const
 SimpleFillSymbol *MapObject::getFillSymbol() const
 {
     return fillSymbol;
+}
+
+void MapObject::setId(int value)
+{
+    id = value;
+}
+
+quint8 MapObject::getCamId() const
+{
+    return camId;
+}
+
+void MapObject::setCamId(const quint8 &value)
+{
+    camId = value;
 }

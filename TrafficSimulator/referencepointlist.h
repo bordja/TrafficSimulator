@@ -8,8 +8,10 @@ class ReferencePointList
 public:
     ReferencePointList();
     Point* getPoleLocationFromId(int id);
+    QList<MapObject *> *getPoles() const;
+
 private:
-    QList<MapObject*>poles;
+    QList<MapObject*>* poles;
 };
 
 #endif // REFERENCEPOINTLIST_H

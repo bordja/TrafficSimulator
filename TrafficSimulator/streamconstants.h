@@ -56,6 +56,9 @@ public:
 
     quint16 getOriginY() const;
 
+    quint8 getCameraId() const;
+    void setCameraId(const quint8 &value);
+
 private:
     quint8 cameraId;
 

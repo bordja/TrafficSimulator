@@ -15,6 +15,7 @@ class MapObject : public QObject
 public:
     explicit MapObject(QObject *parent = nullptr);
     explicit MapObject(mapObjectType mapObjectType, quint16 xImgPix, quint16 yImgPix, quint16 bBoxWidth, quint16 bBoxHeight);
+    explicit MapObject(mapObjectType mapObjectType, quint16 xImgPix, quint16 yImgPix, quint16 bBoxWidth, quint16 bBoxHeight, quint8 camId);
     explicit MapObject(mapObjectType mapObjectType, double longitude, double latitude, int id);
 
     void printInfo();
@@ -47,6 +48,11 @@ public:
 
     SimpleFillSymbol *getFillSymbol() const;
 
+    void setId(int value);
+
+    quint8 getCamId() const;
+    void setCamId(const quint8 &value);
+
 private:
     Point* location;
     Point* bBoxTopRight;
@@ -60,6 +66,7 @@ private:
     SimpleFillSymbol* fillSymbol;
     mapObjectType type;
     int id;
+    quint8 camId;
 signals:
 
 };

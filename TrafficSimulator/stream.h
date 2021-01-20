@@ -24,6 +24,7 @@ public:
     void setNumberOfFrames(const quint16 &value);
 
     StreamConstants *getConstants() const;
+
 signals:
     void streamFinished();
 private:

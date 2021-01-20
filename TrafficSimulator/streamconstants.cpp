@@ -143,3 +143,13 @@ quint16 StreamConstants::getOriginY() const
 {
     return originY;
 }
+
+quint8 StreamConstants::getCameraId() const
+{
+    return cameraId;
+}
+
+void StreamConstants::setCameraId(const quint8 &value)
+{
+    cameraId = value;
+}

@@ -96,6 +96,7 @@ void Stream::readHeader()
     collector>>rightPoleX;
     collector>>rightPoleY;
 
+    constants->setCameraId(cameraId);
     constants->setOriginPoleId(originPoleId);
     constants->setUpperPoleId(upperPoleId);
     constants->setRightPoleId(rightPoleId);
@@ -161,7 +162,7 @@ Point* Stream::calculatePoint(MapObject* mapObject, quint16 xOffset, quint16 yOf
     latitude = constants->getOriginLat();
 
     xImgPix = mapObject->getImgPixPos()->x() + xOffset;
-    yImgPix = mapObject->getImgPixPos()->y() + yOffset;
+    yImgPix = mapObject->getImgPixPos()->y() - yOffset /* * getDirection()*/;
     deltaX = xImgPix - constants->getOriginX();
     deltaY = yImgPix - constants->getOriginY();
 
@@ -234,11 +235,22 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, mapOb
         collector>>bBoxWidthTmp;
         collector>>bBoxHeightTmp;
 
+        /* Filtering detected objects which have bBox dimensions larger than threshold */
         if(!filterObject(bBoxWidthTmp,bBoxHeightTmp))
         {
-            MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
+            /* IOU evaluation: Creating MapObject with different fillColor, deoending on camId */
+            if(iouEval)
+            {
+                quint8 camId = constants->getCameraId();
+                MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp, camId);
+                this->frame->appendMapObject(mapObject, type);
+            }
+            else
+            {
+                MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
+                this->frame->appendMapObject(mapObject, type);
+            }
 
-            this->frame->appendMapObject(mapObject, type);
         }
     }
 }
