@@ -20,7 +20,9 @@
 #include "Map.h"
 #include "MapGraphicsView.h"
 #include "common.h"
-
+#include "PolygonBuilder.h"
+#include "SimpleFillSymbol.h"
+#include "GeometryEngine.h"
 using namespace Esri::ArcGISRuntime;
 
 TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
@@ -52,10 +54,10 @@ TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
 
 void TrafficSimulator::testGraphics()
 {
-    Point* p = new Point(19,43,SpatialReference::wgs84());
-    SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), 7, this);
-    Graphic* graphicPoint = new Graphic(*p,s, this);
-    staticOverlay->graphics()->append(graphicPoint);
+//    Point* p = new Point(19.8348484848,45.2699585858,SpatialReference::wgs84());
+//    SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::cyan), 7, this);
+//    Graphic* graphicPoint = new Graphic(*p,s, this);
+//    staticOverlay->graphics()->append(graphicPoint);
 }
 
 // destructor
@@ -68,23 +70,54 @@ void TrafficSimulator::updateGraphic(Frame* frame)
 
     this->dynamicOverlay->graphics()->clear();
 
-    QVector<MapObject*>* pedestrians = frame->getVectorPointer(pedestrian);
-    QVector<MapObject*>* vehicles = frame->getVectorPointer(vehicle);
+    QVector<MapObject*>* pedestrians = frame->getVectorPointer(PEDESTRIAN);
+    QVector<MapObject*>* vehicles = frame->getVectorPointer(VEHICLE);
 
     for(int i = 0; i < pedestrians->size(); i++)
     {
-        Point* p = pedestrians->at(i)->getLocation();
-        SimpleMarkerSymbol* s = pedestrians->at(i)->getPointSymbol();
-        Graphic* graphicPoint = new Graphic(*p, s, this);
-        dynamicOverlay->graphics()->append(graphicPoint);
+        createObjectGraphic(pedestrians->at(i), displayType);
     }
 
     for(int i = 0; i < vehicles->size(); i++)
     {
-        Point* p = vehicles->at(i)->getLocation();
-        SimpleMarkerSymbol* s = vehicles->at(i)->getPointSymbol();
-        Graphic* graphicPoint = new Graphic(*p, s, this);
-        dynamicOverlay->graphics()->append(graphicPoint);
+        createObjectGraphic(vehicles->at(i), displayType);
     }
     emit graphicUpdated();
+}
+
+void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType type)
+{
+    if(type == POINT)
+    {
+        Point* p = mapObject->getLocation();
+        SimpleMarkerSymbol* s = mapObject->getPointSymbol();
+        Graphic* graphicPoint = new Graphic(*p, s, this);
+        dynamicOverlay->graphics()->append(graphicPoint);
+        return;
+    }
+    else if(type == BOX)
+    {
+        Point* p1 = mapObject->getLocation();
+        Point* p2 = mapObject->getBBoxTopRight();
+        Point* p3 = mapObject->getBBoxBottomLeft();
+        Point* p4 = mapObject->getBBoxBottomRight();
+        static int q = 0;
+
+        QList<Point> points = {*p1,*p2,*p4, *p3};
+        PolygonBuilder* polygonBuilder = new PolygonBuilder(SpatialReference::wgs84(), this);
+        polygonBuilder->addPoints(points);
+
+        SimpleFillSymbol* fillSymbol = mapObject->getFillSymbol();
+        Graphic* fillGraphic = new Graphic(polygonBuilder->toGeometry(), fillSymbol, this);
+//        if(GeometryEngine::area(polygonBuilder->toGeometry())* (-1000000000) > 6.0)
+//        {
+//            qDebug()<<"NOW"<<q++;
+//        }
+        dynamicOverlay->graphics()->append(fillGraphic);
+        return;
+    }
+    else
+    {
+        return;
+    }
 }

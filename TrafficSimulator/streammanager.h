@@ -27,6 +27,7 @@ private:
     QList<Stream*>* streams;
     quint64 activeTimestamp;
     void updateFinalFrame(int);
+    void fillFinalFrameData(mapObjectType, Stream*);
     void updateActiveStreams();
     void updateActiveTimestamp();
 

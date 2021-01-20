@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 
     TrafficSimulator applicationWindow;
     StreamManager manager(applicationWindow);
+
     Stream* cam1 = new Stream(stream1);
     Stream* cam2 = new Stream(stream2);
 

@@ -9,14 +9,14 @@
 Stream::Stream()
 {
     this->currentFrame = 0;
-    this->isActive=false;
+    this->state = NOT_ACTIVE;
 }
 
 Stream::Stream(QString fileName)
 {
     this->openFile(fileName);
     this->currentFrame = 0;
-    this->isActive=false;
+    this->state = NOT_ACTIVE;
     this->numberOfFrames = (this->file->size() - headerSize) / frameSize;
     this->frame = new Frame();
     this->constants = new StreamConstants();
@@ -44,14 +44,14 @@ void Stream::readFileData()
     collector>>timestamp;
     collector>>numPedestrian;
 
-    fillFrameObjectList(collector,numPedestrian,pedestrian);
+    fillFrameObjectList(collector,numPedestrian, PEDESTRIAN);
 
     filePosition = this->file->pos();
     filePosition += (maxPedestrianNum - numPedestrian) * 8;
     this->file->seek(filePosition);
 
     collector>>numVehicle;
-    fillFrameObjectList(collector,numVehicle,vehicle);
+    fillFrameObjectList(collector,numVehicle, VEHICLE);
 
     this->frame->setTimestamp(timestamp);
 
@@ -124,34 +124,53 @@ void Stream::printStreamConstants()
     qDebug()<<"VPDY: "<<qSetRealNumberPrecision(realNumPrintPrecision)<<constants->getVerticalPixelDisplacementY();
 }
 
-void Stream::calculateCoordinates(type mapObjectType)
+void Stream::calculateCoordinates(mapObjectType type)
 {
-    quint16 xImgPix;
-    quint16 yImgPix;
-    quint16 deltaX;
-    quint16 deltaY;
-    double longitude;
-    double latitude;
-    QVector<MapObject*>* objectVector = this->getFrame()->getVectorPointer(mapObjectType);
+
+    QVector<MapObject*>* objectVector = this->getFrame()->getVectorPointer(type);
 
     for(int i = 0; i < objectVector->size(); i++)
     {
-        longitude = constants->getOriginLong();
-        latitude = constants->getOriginLat();
+        Point* location = calculatePoint(objectVector->at(i), 0, 0);
+        objectVector->at(i)->setLocation(location);
+        if(displayType == BOX)
+        {
+            Point* bBoxTopRight = calculatePoint(objectVector->at(i),objectVector->at(i)->getBBoxWidth(), 0);
+            objectVector->at(i)->setBBoxTopRight(bBoxTopRight);
 
-        xImgPix = objectVector->at(i)->getImgPixPos()->x();
-        yImgPix = objectVector->at(i)->getImgPixPos()->y();
-        deltaX = xImgPix - constants->getOriginX();
-        deltaY = yImgPix - constants->getOriginY();
+            Point* bBoxBottomLeft = calculatePoint(objectVector->at(i), 0, objectVector->at(i)->getBBoxHeight());
+            objectVector->at(i)->setBBoxBottomLeft(bBoxBottomLeft);
 
-        longitude += ((deltaX * constants->getHorisontalPixelDisplacementX()) + (deltaY * constants->getVerticalPixelDisplacementX()));
-        latitude += ((deltaX * constants->getHorisontalPixelDisplacementY()) + (deltaY * constants->getVerticalPixelDisplacementY()));
-
-        Point* p = new Point(longitude,latitude,SpatialReference::wgs84());
-        objectVector->at(i)->setLocation(p);
-
+            Point* bBoxBottomRight = calculatePoint(objectVector->at(i),objectVector->at(i)->getBBoxWidth(), objectVector->at(i)->getBBoxHeight());
+            objectVector->at(i)->setBBoxBottomRight(bBoxBottomRight);
+        }
 
     }
+}
+
+Point* Stream::calculatePoint(MapObject* mapObject, quint16 xOffset, quint16 yOffset)
+{
+    quint16 xImgPix;
+    quint16 yImgPix;
+    qint16 deltaX;
+    qint16 deltaY;
+    double longitude;
+    double latitude;
+
+    longitude = constants->getOriginLong();
+    latitude = constants->getOriginLat();
+
+    xImgPix = mapObject->getImgPixPos()->x() + xOffset;
+    yImgPix = mapObject->getImgPixPos()->y() + yOffset;
+    deltaX = xImgPix - constants->getOriginX();
+    deltaY = yImgPix - constants->getOriginY();
+
+    longitude += ((deltaX * constants->getHorisontalPixelDisplacementX()) + (deltaY * constants->getVerticalPixelDisplacementX()));
+    latitude += ((deltaX * constants->getHorisontalPixelDisplacementY()) + (deltaY * constants->getVerticalPixelDisplacementY()));
+
+    Point* p = new Point(longitude,latitude,SpatialReference::wgs84());
+    return p;
+
 }
 
 Frame* Stream::getFrame()
@@ -171,14 +190,14 @@ quint64 Stream::readNextTimestamp()
     return timestamp;
 }
 
-bool Stream::getIsActive() const
+streamState Stream::getState() const
 {
-    return isActive;
+    return state;
 }
 
-void Stream::setIsActive(bool value)
+void Stream::setState(streamState value)
 {
-    isActive = value;
+    state = value;
 }
 
 quint16 Stream::getNumberOfFrames() const
@@ -196,16 +215,16 @@ StreamConstants *Stream::getConstants() const
     return constants;
 }
 
-void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type mapObjectType)
+void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, mapObjectType type)
 {
     quint16 xPixTmp;
     quint16 yPixTmp;
     quint16 bBoxWidthTmp;
     quint16 bBoxHeightTmp;
 
-    if(!(this->getFrame()->getVectorPointer(mapObjectType)->isEmpty()))
+    if(!(this->getFrame()->getVectorPointer(type)->isEmpty()))
     {
-        this->getFrame()->getVectorPointer(mapObjectType)->clear();
+        this->getFrame()->getVectorPointer(type)->clear();
     }
 
     for(int i = 0; i < mapObjectNum; i++)
@@ -215,9 +234,14 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, type 
         collector>>bBoxWidthTmp;
         collector>>bBoxHeightTmp;
 
-        MapObject* mapObject = new MapObject(mapObjectType, xPixTmp, yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
+//        if(bBoxWidthTmp == 1311)
+//        {
+//            qDebug()<<"stop";
+//        }
 
-        this->frame->appendMapObject(mapObject, mapObjectType);
+        MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
+
+        this->frame->appendMapObject(mapObject, type);
     }
 }
 
@@ -227,9 +251,10 @@ void Stream::updateCurrentFrame()
     this->currentFrame++;
     if(currentFrame == numberOfFrames)
     {
-        this->isActive = false;
+        this->state = FINISHED;
         this->getFrame()->setTimestamp(-1);
         qDebug()<<"finished, timestamp is set to: "<<this->getFrame()->getTimestamp();
         emit(streamFinished());
     }
 }
+

@@ -56,8 +56,10 @@ HEADERS += \
     referencepointlist.h \
     stream.h \
     streamconstants.h \
-    data/out_perspective_1 \
-    data/out_perspective_3 \
+    data/v9/out_perspective_1 \
+    data/v9/out_perspective_2 \
+    data/v9/out_perspective_3 \
+    data/v9/out_perspective_4 \
     streammanager.h
 
 # copies the given files to the destination directory

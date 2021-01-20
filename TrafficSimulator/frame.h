@@ -9,9 +9,9 @@ public:
     Frame();
     quint64 getTimestamp() const;
     void setTimestamp(const quint64 &value);
-    void appendMapObject(MapObject* mapObject, type t);
+    void appendMapObject(MapObject* mapObject, mapObjectType t);
     void printLists();
-    QVector<MapObject*>* getVectorPointer(type);
+    QVector<MapObject*>* getVectorPointer(mapObjectType);
 private:
     QVector <MapObject*>* pedestrians;
     QVector <MapObject*>* vehicles;

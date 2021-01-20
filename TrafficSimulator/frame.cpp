@@ -17,13 +17,13 @@ void Frame::setTimestamp(const quint64 &value)
     timestamp = value;
 }
 
-void Frame::appendMapObject(MapObject *mapObject, type mapObjType)
+void Frame::appendMapObject(MapObject *mapObject, mapObjectType type)
 {
-    if(mapObjType == pedestrian)
+    if(type == PEDESTRIAN)
     {
         this->pedestrians->append(mapObject);
     }
-    else if(mapObjType == vehicle)
+    else if(type == VEHICLE)
     {
         this->vehicles->append(mapObject);
     }
@@ -43,13 +43,13 @@ void Frame::printLists()
     }
 }
 
-QVector<MapObject*>* Frame::getVectorPointer(type t)
+QVector<MapObject*>* Frame::getVectorPointer(mapObjectType type)
 {
-    if(t == pedestrian)
+    if(type == PEDESTRIAN)
     {
         return this->pedestrians;
     }
-    else if(t == vehicle)
+    else if(type == VEHICLE)
     {
         return this->vehicles;
     }

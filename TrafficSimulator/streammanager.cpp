@@ -26,7 +26,7 @@ void StreamManager::streamsFinished()
 {
     for(int i = 0; i < streams->size(); i++)
     {
-        if(streams->at(i)->getIsActive())
+        if(streams->at(i)->getState() == ACTIVE)
         {
             return;
         }
@@ -45,7 +45,6 @@ void StreamManager::init()
     for(int i = 0; i < streams->size(); i++)
     {
         streams->at(i)->readHeader();
-        streams->at(i)->getConstants()->calculateConstants();
     }
     updateActiveTimestamp();
     updateActiveStreams();
@@ -56,11 +55,11 @@ void StreamManager::readStreams()
     int mode = 0;
     for(int i = 0; i < streams->size(); i++)
     {
-        if(streams->at(i)->getIsActive())
+        if(streams->at(i)->getState() == ACTIVE)
         {
             streams->at(i)->readFileData();
-            streams->at(i)->calculateCoordinates(pedestrian);
-            streams->at(i)->calculateCoordinates(vehicle);
+            streams->at(i)->calculateCoordinates(PEDESTRIAN);
+            streams->at(i)->calculateCoordinates(VEHICLE);
         }    
     }
     updateFinalFrame(mode);
@@ -74,28 +73,40 @@ void StreamManager::updateFinalFrame(int mode)
 {
     switch (mode) {
     case 0:
-        double longitude;
-        double latitude;
-        finalFrame->getVectorPointer(pedestrian)->clear();
-        finalFrame->getVectorPointer(vehicle)->clear();
+//        double longitude;
+//        double latitude;
+        finalFrame->getVectorPointer(PEDESTRIAN)->clear();
+        finalFrame->getVectorPointer(VEHICLE)->clear();
         for(int i = 0; i < streams->size(); i++)
         {
-            for(int k = 0; k < streams->at(i)->getFrame()->getVectorPointer(pedestrian)->size(); k++)
-            {
-                longitude = streams->at(i)->getFrame()->getVectorPointer(pedestrian)->at(k)->getLocation()->x();
-                latitude = streams->at(i)->getFrame()->getVectorPointer(pedestrian)->at(k)->getLocation()->y();
-                MapObject* p = new MapObject(pedestrian, longitude, latitude, 0);
-                finalFrame->appendMapObject(p, pedestrian);
-            }
-            for(int k = 0; k < streams->at(i)->getFrame()->getVectorPointer(vehicle)->size(); k++)
-            {
-                longitude = streams->at(i)->getFrame()->getVectorPointer(vehicle)->at(k)->getLocation()->x();
-                latitude = streams->at(i)->getFrame()->getVectorPointer(vehicle)->at(k)->getLocation()->y();
-                MapObject* v = new MapObject(vehicle, longitude, latitude, 0);
-                finalFrame->appendMapObject(v, vehicle);
-            }
+//            for(int k = 0; k < streams->at(i)->getFrame()->getVectorPointer(PEDESTRIAN)->size(); k++)
+//            {
+//                longitude = streams->at(i)->getFrame()->getVectorPointer(PEDESTRIAN)->at(k)->getLocation()->x();
+//                latitude = streams->at(i)->getFrame()->getVectorPointer(PEDESTRIAN)->at(k)->getLocation()->y();
+//                MapObject* p = new MapObject(PEDESTRIAN, longitude, latitude, 0);
+//                finalFrame->appendMapObject(p, PEDESTRIAN);
+//            }
+//            for(int k = 0; k < streams->at(i)->getFrame()->getVectorPointer(VEHICLE)->size(); k++)
+//            {
+//                longitude = streams->at(i)->getFrame()->getVectorPointer(VEHICLE)->at(k)->getLocation()->x();
+//                latitude = streams->at(i)->getFrame()->getVectorPointer(VEHICLE)->at(k)->getLocation()->y();
+//                MapObject* v = new MapObject(VEHICLE, longitude, latitude, 0);
+//                finalFrame->appendMapObject(v, VEHICLE);
+//            }
+            fillFinalFrameData(PEDESTRIAN, streams->at(i));
+            fillFinalFrameData(VEHICLE, streams->at(i));
         }
         break;
+    }
+}
+
+void StreamManager::fillFinalFrameData(mapObjectType type, Stream* stream)
+{
+    QVector<MapObject*>* vectorPtr = stream->getFrame()->getVectorPointer(type);
+    for(int i = 0; i < vectorPtr->size(); i++)
+    {
+        MapObject* finalFrameObject = vectorPtr->at(i);
+        finalFrame->appendMapObject(finalFrameObject, type);
     }
 }
 
@@ -105,7 +116,10 @@ void StreamManager::updateActiveStreams()
     {
         if((quint64)(streams->at(i)->getFrame()->getTimestamp() - activeTimestamp) < fps60Freq)
         {
-            streams->at(i)->setIsActive(true);
+            if(streams->at(i)->getState() == NOT_ACTIVE)
+            {
+                streams->at(i)->setState(ACTIVE);
+            }
         }
     }
 }

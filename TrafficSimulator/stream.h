@@ -3,6 +3,7 @@
 #include <QFile>
 #include "frame.h"
 #include "streamconstants.h"
+enum streamState {NOT_ACTIVE = 0, ACTIVE, FINISHED};
 class Stream : public QObject
 {
     Q_OBJECT
@@ -13,11 +14,11 @@ public:
     void readFileData();
     void readHeader();
     void printStreamConstants();
-    void calculateCoordinates(type mapObjectType);
+    void calculateCoordinates(mapObjectType type);
 
     Frame* getFrame();
-    bool getIsActive() const;
-    void setIsActive(bool value);
+    streamState getState() const;
+    void setState(streamState value);
     quint64 readNextTimestamp();
     quint16 getNumberOfFrames() const;
     void setNumberOfFrames(const quint16 &value);
@@ -31,10 +32,11 @@ private:
     StreamConstants* constants;
     quint16 currentFrame;
     quint16 numberOfFrames;
-    bool isActive;
+    streamState state;
 
-    void fillFrameObjectList(QDataStream& collector, int mapObjectNum, type mapObjectType);
+    void fillFrameObjectList(QDataStream& collector, int mapObjectNum, mapObjectType type);
     void updateCurrentFrame();
+    Point* calculatePoint(MapObject* mapObject, quint16 xOffset, quint16 yOffset);
 };
 
 #endif // STREAM_H

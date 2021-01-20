@@ -27,6 +27,8 @@ class Graphic;
 
 #include <QMainWindow>
 
+enum graphicType {POINT = 0, BOX};
+
 class TrafficSimulator : public QMainWindow
 {
     Q_OBJECT
@@ -44,6 +46,7 @@ private:
     Esri::ArcGISRuntime::MapGraphicsView*       m_mapView = nullptr;
     Esri::ArcGISRuntime::GraphicsOverlay*       dynamicOverlay = nullptr;
     Esri::ArcGISRuntime::GraphicsOverlay*       staticOverlay = nullptr;
+    void createObjectGraphic(MapObject*, graphicType);
 };
 
 #endif // TRAFFICSIMULATOR_H
