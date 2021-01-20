@@ -234,14 +234,24 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, mapOb
         collector>>bBoxWidthTmp;
         collector>>bBoxHeightTmp;
 
-//        if(bBoxWidthTmp == 1311)
-//        {
-//            qDebug()<<"stop";
-//        }
+        if(!filterObject(bBoxWidthTmp,bBoxHeightTmp))
+        {
+            MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
 
-        MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp);
+            this->frame->appendMapObject(mapObject, type);
+        }
+    }
+}
 
-        this->frame->appendMapObject(mapObject, type);
+bool Stream::filterObject(quint16 bBoxWidth, quint16 bBoxHeight)
+{
+    if((bBoxWidth < bBoxWidthThresh) && (bBoxHeight < bBoxHeightThresh))
+    {
+        return false;
+    }
+    else
+    {
+        return true;
     }
 }
 

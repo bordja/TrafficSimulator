@@ -101,7 +101,6 @@ void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType typ
         Point* p2 = mapObject->getBBoxTopRight();
         Point* p3 = mapObject->getBBoxBottomLeft();
         Point* p4 = mapObject->getBBoxBottomRight();
-        static int q = 0;
 
         QList<Point> points = {*p1,*p2,*p4, *p3};
         PolygonBuilder* polygonBuilder = new PolygonBuilder(SpatialReference::wgs84(), this);
@@ -109,10 +108,7 @@ void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType typ
 
         SimpleFillSymbol* fillSymbol = mapObject->getFillSymbol();
         Graphic* fillGraphic = new Graphic(polygonBuilder->toGeometry(), fillSymbol, this);
-//        if(GeometryEngine::area(polygonBuilder->toGeometry())* (-1000000000) > 6.0)
-//        {
-//            qDebug()<<"NOW"<<q++;
-//        }
+
         dynamicOverlay->graphics()->append(fillGraphic);
         return;
     }

@@ -22,5 +22,7 @@ static const int imageHeight = 1080;
 static const int realNumPrintPrecision = 15;
 static const int mapObjectPointSize = 4;
 static const graphicType displayType = BOX;
+static const quint16 bBoxWidthThresh = 500;
+static const quint16 bBoxHeightThresh = 500;
 
 #endif // COMMON_H

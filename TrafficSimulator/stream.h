@@ -37,6 +37,7 @@ private:
     void fillFrameObjectList(QDataStream& collector, int mapObjectNum, mapObjectType type);
     void updateCurrentFrame();
     Point* calculatePoint(MapObject* mapObject, quint16 xOffset, quint16 yOffset);
+    bool filterObject(quint16 bBoxWidth, quint16 bBoxHeight);
 };
 
 #endif // STREAM_H
