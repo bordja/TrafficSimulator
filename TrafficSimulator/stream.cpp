@@ -133,7 +133,7 @@ void Stream::calculateCoordinates(mapObjectType type)
     for(int i = 0; i < objectVector->size(); i++)
     {
         Point* location = calculatePoint(objectVector->at(i), 0, 0);
-        objectVector->at(i)->setLocation(location);
+        objectVector->at(i)->setBBoxTopLeft(location);
         if(displayType == BOX)
         {
             Point* bBoxTopRight = calculatePoint(objectVector->at(i),objectVector->at(i)->getBBoxWidth(), 0);

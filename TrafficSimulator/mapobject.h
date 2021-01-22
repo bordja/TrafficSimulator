@@ -22,11 +22,11 @@ public:
 
     int getId() const;
 
-    Point* getLocation();
+    Point* getBBoxTopLeft();
 
     Point* getImgPixPos() const;
 
-    void setLocation(Point *value);
+    void setBBoxTopLeft(Point *value);
 
     SimpleMarkerSymbol *getPointSymbol() const;
 
@@ -54,7 +54,7 @@ public:
     void setCamId(const quint8 &value);
 
 private:
-    Point* location;
+    Point* bBoxTopLeft;
     Point* bBoxTopRight;
     Point* bBoxBottomLeft;
     Point* bBoxBottomRight;

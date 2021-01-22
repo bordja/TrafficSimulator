@@ -6,31 +6,37 @@
 #include "stream.h"
 #include "frame.h"
 #include "TrafficSimulator.h"
+#include "QPair"
+#include "helpers.h"
 class StreamManager : public QObject
 {
     Q_OBJECT
 public:
     StreamManager();
-    StreamManager(TrafficSimulator&);
+    StreamManager(TrafficSimulator&, Helpers&);
     void addStream(Stream* stream);
     void streamsFinished();
-    void run();
+
     void init();
 
     Frame* finalFrame;
 public slots:
     void readStreams();
+    void run();
 signals:
     void dataReady(Frame*);
     void finished();
+    Geometry* getGeometryFromPoints(QList<Point*>*);
 private:
     QList<Stream*>* streams;
+    QList<QPair<MapObject*, MapObject*>*>* pairs;
     quint64 activeTimestamp;
     void updateFinalFrame(int);
     void fillFinalFrameData(mapObjectType, Stream*);
     void updateActiveStreams();
     void updateActiveTimestamp();
-
+    void mergeDoubles(mapObjectType type);
+    void checkOverlapBBox(Stream* stream1, Stream* stream2, mapObjectType type);
 };
 
 #endif // STREAMMANAGER_H

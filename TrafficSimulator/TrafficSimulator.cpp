@@ -23,6 +23,7 @@
 #include "PolygonBuilder.h"
 #include "SimpleFillSymbol.h"
 #include "referencepointlist.h"
+#include <QThread>
 using namespace Esri::ArcGISRuntime;
 
 TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
@@ -58,7 +59,7 @@ void TrafficSimulator::testGraphics()
     SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::cyan), 7, this);
     for(int i = 0; i< lightPoles.getPoles()->size(); i++)
     {
-        Point* p = lightPoles.getPoles()->at(i)->getLocation();
+        Point* p = lightPoles.getPoles()->at(i)->getBBoxTopLeft();
         Graphic* graphicPoint = new Graphic(*p,s, this);
         staticOverlay->graphics()->append(graphicPoint);
     }
@@ -71,7 +72,6 @@ TrafficSimulator::~TrafficSimulator()
 
 void TrafficSimulator::updateGraphic(Frame* frame)
 {
-
     this->dynamicOverlay->graphics()->clear();
 
     QVector<MapObject*>* pedestrians = frame->getVectorPointer(PEDESTRIAN);
@@ -93,7 +93,7 @@ void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType typ
 {
     if(type == POINT)
     {
-        Point* p = mapObject->getLocation();
+        Point* p = mapObject->getBBoxTopLeft();
         SimpleMarkerSymbol* s = mapObject->getPointSymbol();
         Graphic* graphicPoint = new Graphic(*p, s, this);
         dynamicOverlay->graphics()->append(graphicPoint);
@@ -101,7 +101,7 @@ void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType typ
     }
     else if(type == BOX)
     {
-        Point* p1 = mapObject->getLocation();
+        Point* p1 = mapObject->getBBoxTopLeft();
         Point* p2 = mapObject->getBBoxTopRight();
         Point* p3 = mapObject->getBBoxBottomLeft();
         Point* p4 = mapObject->getBBoxBottomRight();

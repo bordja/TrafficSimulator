@@ -22,6 +22,7 @@
 #include "streammanager.h"
 #include "stream.h"
 #include "common.h"
+#include "helpers.h"
 using namespace Esri::ArcGISRuntime;
 
 int main(int argc, char *argv[])
@@ -47,7 +48,8 @@ int main(int argc, char *argv[])
       }
 
     TrafficSimulator applicationWindow;
-    StreamManager manager(applicationWindow);
+    Helpers* helpers = new Helpers;
+    StreamManager manager(applicationWindow, *helpers);
 
     Stream* cam1 = new Stream(stream1);
     Stream* cam2 = new Stream(stream2);
@@ -58,16 +60,16 @@ int main(int argc, char *argv[])
     QThread producerThread;
 
     manager.moveToThread(&producerThread);
-    producerThread.start();
-    QObject::connect(&manager, SIGNAL(finished()), &producerThread, SLOT(quit()));
+
 
     applicationWindow.setMinimumWidth(800);
     applicationWindow.setMinimumHeight(600);
     applicationWindow.show();
     applicationWindow.testGraphics();
 
-    manager.init();
-    manager.run();
 
+    QObject::connect(&manager, SIGNAL(finished()), &producerThread, SLOT(quit()));
+    QObject::connect(&producerThread, SIGNAL(started()), &manager, SLOT(run()));
+    producerThread.start();
     return application.exec();
 }
