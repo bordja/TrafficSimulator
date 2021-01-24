@@ -40,7 +40,6 @@ DATA_FILES += \
 
 SOURCES += \
     frame.cpp \
-    helpers.cpp \
     main.cpp \
     TrafficSimulator.cpp  \
     mapobject.cpp \
@@ -53,7 +52,6 @@ HEADERS += \
     TrafficSimulator.h \
     common.h \
     frame.h \
-    helpers.h \
     mapobject.h \
     referencepointlist.h \
     stream.h \

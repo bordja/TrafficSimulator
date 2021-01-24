@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QString>
 #include "TrafficSimulator.h"
+enum mergeAlgorithm {NO_MERGING, MERGE_DOUBLES};
 
 static const QDir dataDir ("data/v9");
 static const QString stream1 = dataDir.filePath("out_perspective_1");
@@ -22,9 +23,10 @@ static const int imageHeight = 1080;
 static const int realNumPrintPrecision = 15;
 static const int mapObjectPointSize = 4;
 static const graphicType displayType = BOX;
+static const mergeAlgorithm alg = MERGE_DOUBLES;
 static const quint16 bBoxWidthThresh = 500;
 static const quint16 bBoxHeightThresh = 500;
-static const bool iouEval = true;
+static const bool cameraSpecificDetections = true;
 static const int iouEvalColorOffset = 100;
 
 #endif // COMMON_H

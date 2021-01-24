@@ -132,10 +132,11 @@ void Stream::calculateCoordinates(mapObjectType type)
 
     for(int i = 0; i < objectVector->size(); i++)
     {
-        Point* location = calculatePoint(objectVector->at(i), 0, 0);
-        objectVector->at(i)->setBBoxTopLeft(location);
-        if(displayType == BOX)
+        if(direction == RIGHT)
         {
+            Point* location = calculatePoint(objectVector->at(i), 0, 0);
+            objectVector->at(i)->setBBoxTopLeft(location);
+
             Point* bBoxTopRight = calculatePoint(objectVector->at(i),objectVector->at(i)->getBBoxWidth(), 0);
             objectVector->at(i)->setBBoxTopRight(bBoxTopRight);
 
@@ -145,7 +146,19 @@ void Stream::calculateCoordinates(mapObjectType type)
             Point* bBoxBottomRight = calculatePoint(objectVector->at(i),objectVector->at(i)->getBBoxWidth(), objectVector->at(i)->getBBoxHeight());
             objectVector->at(i)->setBBoxBottomRight(bBoxBottomRight);
         }
+        else {
+            Point* location = calculatePoint(objectVector->at(i), objectVector->at(i)->getBBoxWidth(), objectVector->at(i)->getBBoxHeight());
+            objectVector->at(i)->setBBoxTopLeft(location);
 
+            Point* bBoxTopRight = calculatePoint(objectVector->at(i), 0, objectVector->at(i)->getBBoxHeight());
+            objectVector->at(i)->setBBoxTopRight(bBoxTopRight);
+
+            Point* bBoxBottomLeft = calculatePoint(objectVector->at(i), objectVector->at(i)->getBBoxWidth(), 0);
+            objectVector->at(i)->setBBoxBottomLeft(bBoxBottomLeft);
+
+            Point* bBoxBottomRight = calculatePoint(objectVector->at(i),0, 0);
+            objectVector->at(i)->setBBoxBottomRight(bBoxBottomRight);
+        }
     }
 }
 
@@ -216,6 +229,16 @@ StreamConstants *Stream::getConstants() const
     return constants;
 }
 
+viewDirection Stream::getDirection() const
+{
+    return direction;
+}
+
+void Stream::setDirection(const viewDirection &value)
+{
+    direction = value;
+}
+
 void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, mapObjectType type)
 {
     quint16 xPixTmp;
@@ -238,9 +261,9 @@ void Stream::fillFrameObjectList(QDataStream &collector, int mapObjectNum, mapOb
         /* Filtering detected objects which have bBox dimensions larger than threshold */
         if(!filterObject(bBoxWidthTmp,bBoxHeightTmp))
         {
-            /* IOU evaluation: Creating MapObject with different fillColor, deoending on camId */
-            if(iouEval)
+            if(cameraSpecificDetections)
             {
+                /* Creating MapObject with different fillColor, depending on camId */
                 quint8 camId = constants->getCameraId();
                 MapObject* mapObject = new MapObject(type, xPixTmp, imageHeight - yPixTmp, bBoxWidthTmp, bBoxHeightTmp, camId);
                 this->frame->appendMapObject(mapObject, type);
@@ -275,7 +298,6 @@ void Stream::updateCurrentFrame()
     {
         this->state = FINISHED;
         this->getFrame()->setTimestamp(-1);
-        qDebug()<<"finished, timestamp is set to: "<<this->getFrame()->getTimestamp();
         emit(streamFinished());
     }
 }

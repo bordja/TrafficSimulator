@@ -77,7 +77,7 @@ Point* ReferencePointList::getPoleLocationFromId(int id)
         if(poles->at(i)->getId() == id)
         {
 
-            return (poles->at(i)->getBBoxTopLeft());
+            return (poles->at(i)->getCenter());
         }
     }
     return nullptr;

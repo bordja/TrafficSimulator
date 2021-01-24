@@ -24,6 +24,7 @@
 #include "SimpleFillSymbol.h"
 #include "referencepointlist.h"
 #include <QThread>
+#include "GeometryEngine.h"
 using namespace Esri::ArcGISRuntime;
 
 TrafficSimulator::TrafficSimulator(QWidget* parent /*=nullptr*/):
@@ -59,7 +60,7 @@ void TrafficSimulator::testGraphics()
     SimpleMarkerSymbol* s = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::cyan), 7, this);
     for(int i = 0; i< lightPoles.getPoles()->size(); i++)
     {
-        Point* p = lightPoles.getPoles()->at(i)->getBBoxTopLeft();
+        Point* p = lightPoles.getPoles()->at(i)->getCenter();
         Graphic* graphicPoint = new Graphic(*p,s, this);
         staticOverlay->graphics()->append(graphicPoint);
     }
@@ -112,7 +113,6 @@ void TrafficSimulator::createObjectGraphic(MapObject* mapObject, graphicType typ
 
         SimpleFillSymbol* fillSymbol = mapObject->getFillSymbol();
         Graphic* fillGraphic = new Graphic(polygonBuilder->toGeometry(), fillSymbol, this);
-
         dynamicOverlay->graphics()->append(fillGraphic);
         return;
     }

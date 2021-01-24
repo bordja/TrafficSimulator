@@ -7,13 +7,13 @@
 #include "frame.h"
 #include "TrafficSimulator.h"
 #include "QPair"
-#include "helpers.h"
+
 class StreamManager : public QObject
 {
     Q_OBJECT
 public:
     StreamManager();
-    StreamManager(TrafficSimulator&, Helpers&);
+    StreamManager(TrafficSimulator&);
     void addStream(Stream* stream);
     void streamsFinished();
 
@@ -37,6 +37,8 @@ private:
     void updateActiveTimestamp();
     void mergeDoubles(mapObjectType type);
     void checkOverlapBBox(Stream* stream1, Stream* stream2, mapObjectType type);
+    void appendPair(QPair<MapObject*, MapObject*>*);
+    void merge();
 };
 
 #endif // STREAMMANAGER_H

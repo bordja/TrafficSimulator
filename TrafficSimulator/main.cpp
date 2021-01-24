@@ -22,7 +22,6 @@
 #include "streammanager.h"
 #include "stream.h"
 #include "common.h"
-#include "helpers.h"
 using namespace Esri::ArcGISRuntime;
 
 int main(int argc, char *argv[])
@@ -48,12 +47,12 @@ int main(int argc, char *argv[])
       }
 
     TrafficSimulator applicationWindow;
-    Helpers* helpers = new Helpers;
-    StreamManager manager(applicationWindow, *helpers);
+    StreamManager manager(applicationWindow);
 
     Stream* cam1 = new Stream(stream1);
     Stream* cam2 = new Stream(stream2);
-
+    cam1->setDirection(RIGHT);
+    cam2->setDirection(LEFT);
     manager.addStream(cam1);
     manager.addStream(cam2);
 

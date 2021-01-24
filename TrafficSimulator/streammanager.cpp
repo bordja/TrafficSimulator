@@ -4,7 +4,7 @@
 #include "PolygonBuilder.h"
 #include <GeometryEngine.h>
 #include <QThread>
-static int cnt = 0;
+
 StreamManager::StreamManager()
 {
     finalFrame = new Frame();
@@ -12,14 +12,13 @@ StreamManager::StreamManager()
     this->pairs = new QList<QPair<MapObject*,MapObject*>*>;
 }
 
-StreamManager::StreamManager(TrafficSimulator& simulator, Helpers& helpers)
+StreamManager::StreamManager(TrafficSimulator& simulator)
 {
     finalFrame = new Frame();
     this->streams = new QList<Stream*>;
+    this->pairs = new QList<QPair<MapObject*,MapObject*>*>;
     connect(this, &StreamManager::dataReady,&simulator,&TrafficSimulator::updateGraphic);
     connect(&simulator,&TrafficSimulator::graphicUpdated,this, &StreamManager::readStreams);
-    connect(this, &StreamManager::getGeometryFromPoints, &helpers, &Helpers::createGeometryFromPoints, Qt::QueuedConnection);
-//    connect(this,SIGNAL(Geometry* StreamManager::getGeometryFromPoints(QList<MapObject*>*)), &helpers, SLOT(createGeometryFromPoints(QList<MapObject*>*)));
 }
 
 void StreamManager::addStream(Stream* stream)
@@ -60,7 +59,6 @@ void StreamManager::init()
 
 void StreamManager::readStreams()
 {
-    int mode = 1;
     for(int i = 0; i < streams->size(); i++)
     {
         if(streams->at(i)->getState() == ACTIVE)
@@ -70,7 +68,7 @@ void StreamManager::readStreams()
             streams->at(i)->calculateCoordinates(VEHICLE);
         }    
     }
-    updateFinalFrame(mode);
+    updateFinalFrame(alg);
     updateActiveTimestamp();
     updateActiveStreams();
 
@@ -82,7 +80,7 @@ void StreamManager::updateFinalFrame(int mode)
     finalFrame->getVectorPointer(PEDESTRIAN)->clear();
     finalFrame->getVectorPointer(VEHICLE)->clear();
     switch (mode) {
-    case 0:
+    case NO_MERGING:
         for(int i = 0; i < streams->size(); i++)
         {
             fillFinalFrameData(PEDESTRIAN, streams->at(i));
@@ -90,9 +88,14 @@ void StreamManager::updateFinalFrame(int mode)
         }
         break;
 
-    case 1:
+    case MERGE_DOUBLES:
         //mergeDoubles(PEDESTRIAN);
         mergeDoubles(VEHICLE);
+        for(int i = 0; i < streams->size(); i++)
+        {
+            fillFinalFrameData(PEDESTRIAN, streams->at(i));
+            fillFinalFrameData(VEHICLE, streams->at(i));
+        }
         break;
     }
 }
@@ -103,7 +106,11 @@ void StreamManager::fillFinalFrameData(mapObjectType type, Stream* stream)
     for(int i = 0; i < vectorPtr->size(); i++)
     {
         MapObject* finalFrameObject = vectorPtr->at(i);
-        finalFrame->appendMapObject(finalFrameObject, type);
+        if(finalFrameObject->getIsValid())
+        {
+            finalFrame->appendMapObject(finalFrameObject, type);
+        }
+
     }
 }
 
@@ -146,7 +153,8 @@ void StreamManager::updateActiveTimestamp()
 
 void StreamManager::mergeDoubles(mapObjectType type)
 {
-    static int cnt = 0;
+    /* Detect overlaping objects from different cameras */
+
     for(int i = 0; i < streams->size(); i++)
     {
         for(int j = 0; j < streams->size(); j++)
@@ -154,10 +162,13 @@ void StreamManager::mergeDoubles(mapObjectType type)
             if(i != j)
             {
                 checkOverlapBBox(streams->at(i),streams->at(j), type);
-                cnt++;
             }
         }
     }
+
+    /* Mergeing doubles and adding them to the final frame */
+    merge();
+    pairs->clear();
 }
 
 void StreamManager::checkOverlapBBox(Stream* stream1, Stream* stream2, mapObjectType type)
@@ -205,14 +216,13 @@ void StreamManager::checkOverlapBBox(Stream* stream1, Stream* stream2, mapObject
 
             Geometry* geometry2 = new Geometry(polygonBuilder2->toGeometry());
 
-
-//            GeometryEngine::intersects(*geometry1, *geometry2);
-//            qDebug()<<GeometryEngine::area(gUnion) * 1000000000;
-
             if(GeometryEngine::intersects(*geometry1, *geometry2))
             {
-                finalFrame->appendMapObject(vector1->at(i), type);
-                finalFrame->appendMapObject(vector2->at(j), type);
+                QPair<MapObject*, MapObject*>* pair = new QPair<MapObject*, MapObject*>;
+                pair->first = vector1->at(i);
+                pair->second = vector2->at(j);
+                appendPair(pair);
+
             }
             /* TO DO: FIX DELETES*/
             delete qList;
@@ -224,5 +234,88 @@ void StreamManager::checkOverlapBBox(Stream* stream1, Stream* stream2, mapObject
         delete polygonBuilder1;
     }
 
+}
+
+void StreamManager::appendPair(QPair<MapObject *, MapObject *> * pair)
+{
+    for(int i = 0; i < pairs->size(); i++)
+    {
+        /* Removing double pairs */
+        if(pair->first == pairs->at(i)->second)
+        {
+            if(pair->second == pairs->at(i)->first)
+            {
+                delete pair;
+                return;
+            }
+        }
+    }
+    pairs->append(pair);
+}
+
+void StreamManager::merge()
+{
+    double longitudeFirst;
+    double latitudeFirst;
+    double longitudeSecond;
+    double latitudeSecond;
+
+    for(int i = 0; i < pairs->size(); i++)
+    {
+        pairs->at(i)->first->setIsValid(false);
+        pairs->at(i)->second->setIsValid(false);
+
+        pairs->at(i)->first->calculateCenter();
+        pairs->at(i)->second->calculateCenter();
+
+        longitudeFirst = pairs->at(i)->first->getCenter()->x();
+        latitudeFirst = pairs->at(i)->first->getCenter()->y();
+        longitudeSecond = pairs->at(i)->second->getCenter()->x();
+        latitudeSecond = pairs->at(i)->second->getCenter()->y();
+
+        MapObject* merged = new MapObject(pairs->at(i)->first->getType() \
+                                          , (longitudeFirst + longitudeSecond) / 2 \
+                                          ,(latitudeFirst + latitudeSecond) / 2 \
+                                          ,0);
+
+        longitudeFirst = pairs->at(i)->first->getBBoxTopLeft()->x();
+        latitudeFirst = pairs->at(i)->first->getBBoxTopLeft()->y();
+        longitudeSecond = pairs->at(i)->second->getBBoxTopLeft()->x();
+        latitudeSecond = pairs->at(i)->second->getBBoxTopLeft()->y();
+
+        Point* topLeft = new Point((longitudeFirst+longitudeSecond) / 2 \
+                                   , (latitudeFirst+latitudeSecond) /2 \
+                                   , SpatialReference::wgs84());
+        merged->setBBoxTopLeft(topLeft);
+
+        longitudeFirst = pairs->at(i)->first->getBBoxTopRight()->x();
+        latitudeFirst = pairs->at(i)->first->getBBoxTopRight()->y();
+        longitudeSecond = pairs->at(i)->second->getBBoxTopRight()->x();
+        latitudeSecond = pairs->at(i)->second->getBBoxTopRight()->y();
+        Point* topRight = new Point((longitudeFirst+longitudeSecond) / 2 \
+                                   , (latitudeFirst+latitudeSecond) / 2 \
+                                   , SpatialReference::wgs84());
+        merged->setBBoxTopRight(topRight);
+
+        longitudeFirst = pairs->at(i)->first->getBBoxBottomLeft()->x();
+        latitudeFirst = pairs->at(i)->first->getBBoxBottomLeft()->y();
+        longitudeSecond = pairs->at(i)->second->getBBoxBottomLeft()->x();
+        latitudeSecond = pairs->at(i)->second->getBBoxBottomLeft()->y();
+        Point* bottomLeft = new Point((longitudeFirst+longitudeSecond) / 2 \
+                                   , (latitudeFirst+latitudeSecond) / 2 \
+                                   , SpatialReference::wgs84());
+        merged->setBBoxBottomLeft(bottomLeft);
+
+        longitudeFirst = pairs->at(i)->first->getBBoxBottomRight()->x();
+        latitudeFirst = pairs->at(i)->first->getBBoxBottomRight()->y();
+        longitudeSecond = pairs->at(i)->second->getBBoxBottomRight()->x();
+        latitudeSecond = pairs->at(i)->second->getBBoxBottomRight()->y();
+        Point* bottomRight = new Point((longitudeFirst+longitudeSecond) / 2 \
+                                   , (latitudeFirst+latitudeSecond) / 2 \
+                                   , SpatialReference::wgs84());
+        merged->setBBoxBottomRight(bottomRight);
+
+        finalFrame->appendMapObject(merged, merged->getType());
+    }
 }
 

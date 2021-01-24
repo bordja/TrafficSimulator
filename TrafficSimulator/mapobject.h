@@ -53,19 +53,37 @@ public:
     quint8 getCamId() const;
     void setCamId(const quint8 &value);
 
+    Point *getCenter() const;
+    void setCenter(Point *value);
+
+    void resetIDs();
+
+    bool getIsValid() const;
+    void setIsValid(bool value);
+
+    void calculateCenter();
+    mapObjectType getType() const;
+
 private:
     Point* bBoxTopLeft;
     Point* bBoxTopRight;
     Point* bBoxBottomLeft;
     Point* bBoxBottomRight;
-
+    Point* center;
     Point* imgPixPos;
+
     quint16 bBoxWidth;
     quint16 bBoxHeight;
+
     SimpleMarkerSymbol* pointSymbol;
     SimpleFillSymbol* fillSymbol;
+
     mapObjectType type;
+
     int id;
+
+    bool isValid;
+
     quint8 camId;
 signals:
 

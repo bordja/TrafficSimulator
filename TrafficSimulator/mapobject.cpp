@@ -1,6 +1,12 @@
 #include "mapobject.h"
 #include <QDebug>
+#include "Polygon.h"
+#include "PolygonBuilder.h"
+#include "GeometryEngine.h"
 #include "common.h"
+
+static int idCnt = 0;
+
 MapObject::MapObject(QObject *parent) : QObject(parent)
 {
     this->bBoxTopLeft = new Point(0, 0, SpatialReference::wgs84());
@@ -11,6 +17,9 @@ MapObject::MapObject(QObject *parent) : QObject(parent)
 
 MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint16 bBoxWidth, quint16 bBoxHeight)
 {
+    this->id = idCnt;
+    idCnt++;
+    this->isValid = true;
     this->type = type;
     this->imgPixPos = new Point(xImgPix,yImgPix,SpatialReference::wgs84());
     this->bBoxWidth = bBoxWidth;
@@ -19,6 +28,7 @@ MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint
     this->bBoxTopRight = new Point(0, 0, SpatialReference::wgs84());
     this->bBoxBottomLeft = new Point(0, 0, SpatialReference::wgs84());
     this->bBoxBottomRight = new Point(0, 0, SpatialReference::wgs84());
+    this->center = new Point(0, 0, SpatialReference::wgs84());
     if(type == PEDESTRIAN)
     {
         this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), mapObjectPointSize, this);
@@ -38,6 +48,9 @@ MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint
 
 MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint16 bBoxWidth, quint16 bBoxHeight, quint8 camId)
 {
+    this->id = idCnt;
+    idCnt++;
+    this->isValid = true;
     this->type = type;
     this->imgPixPos = new Point(xImgPix,yImgPix,SpatialReference::wgs84());
     this->bBoxWidth = bBoxWidth;
@@ -46,7 +59,7 @@ MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint
     this->bBoxTopRight = new Point(0, 0, SpatialReference::wgs84());
     this->bBoxBottomLeft = new Point(0, 0, SpatialReference::wgs84());
     this->bBoxBottomRight = new Point(0, 0, SpatialReference::wgs84());
-
+    this->center = new Point(0, 0, SpatialReference::wgs84());
     /* Setting different colors depending on the camera ID */
     if(type == PEDESTRIAN)
     {
@@ -82,9 +95,14 @@ MapObject::MapObject(mapObjectType type, quint16 xImgPix, quint16 yImgPix, quint
 
 MapObject::MapObject(mapObjectType type, double longitude, double latitude, int id)
 {
-    this->bBoxTopLeft = new Point(longitude, latitude, SpatialReference::wgs84());
+    this->center = new Point(longitude, latitude, SpatialReference::wgs84());
     this->id = id;
     this->type = type;
+    this->isValid = true;
+    this->bBoxTopLeft = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxTopRight = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxBottomLeft = new Point(0, 0, SpatialReference::wgs84());
+    this->bBoxBottomRight = new Point(0, 0, SpatialReference::wgs84());
     if(type == PEDESTRIAN)
     {
         this->pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle::Circle, QColor(Qt::red), mapObjectPointSize, this);
@@ -217,4 +235,51 @@ quint8 MapObject::getCamId() const
 void MapObject::setCamId(const quint8 &value)
 {
     camId = value;
+}
+
+Point *MapObject::getCenter() const
+{
+    return center;
+}
+
+void MapObject::setCenter(Point *value)
+{
+    Point* old = center;
+    center = value;
+    if(old != nullptr)
+    {
+        delete old;
+    }
+}
+
+void MapObject::resetIDs()
+{
+    idCnt = 0;
+}
+
+bool MapObject::getIsValid() const
+{
+    return isValid;
+}
+
+void MapObject::setIsValid(bool value)
+{
+    isValid = value;
+}
+
+void MapObject::calculateCenter()
+{
+    QList<Point> points {*bBoxTopLeft,*bBoxTopRight, *bBoxBottomRight, *bBoxBottomLeft};
+
+    PolygonBuilder polygonBuilder(SpatialReference::wgs84(), this);
+    polygonBuilder.addPoints(points);
+    Point p = GeometryEngine::labelPoint(polygonBuilder.toPolygon());
+    Point* newCenter = new Point(p.x(),p.y(), SpatialReference::wgs84());
+    setCenter(newCenter);
+    //p.~Point();
+}
+
+mapObjectType MapObject::getType() const
+{
+    return type;
 }

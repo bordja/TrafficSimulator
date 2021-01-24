@@ -4,6 +4,7 @@
 #include "frame.h"
 #include "streamconstants.h"
 enum streamState {NOT_ACTIVE = 0, ACTIVE, FINISHED};
+enum viewDirection {RIGHT = 0, LEFT};
 class Stream : public QObject
 {
     Q_OBJECT
@@ -25,6 +26,9 @@ public:
 
     StreamConstants *getConstants() const;
 
+    viewDirection getDirection() const;
+    void setDirection(const viewDirection &value);
+
 signals:
     void streamFinished();
 private:
@@ -34,6 +38,7 @@ private:
     quint16 currentFrame;
     quint16 numberOfFrames;
     streamState state;
+    viewDirection direction;
 
     void fillFrameObjectList(QDataStream& collector, int mapObjectNum, mapObjectType type);
     void updateCurrentFrame();
